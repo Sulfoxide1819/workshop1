@@ -1,0 +1,33 @@
+#! /usr/bin/gnuplot
+set encoding utf8
+set datafile separator ','
+set terminal pngcairo enhanced color size 30cm,20cm font "Times-Roman,13"
+set output 'precise_spline.png'
+
+filename = 'precise.csv'
+stats filename using 2 nooutput
+N = STATS_records
+
+unset border
+set xzeroaxis lt -1 lc rgb "black"
+set yzeroaxis lt -1 lc rgb "black"
+set xtics axis
+set ytics axis
+set xtics floor(STATS_min) + 0.2 , 0.2, ceil(STATS_max) - 0.4
+#set xtics add ("273.2" (floor(STATS_min) + 0.2) 1) 
+set ytics 0.05
+set ytics nomirror
+set xlabel "Период следования импульсов, мс"
+set ylabel "Частота наблюдений" rotate by 90 offset 1
+set title "График распределения на точной шкале"
+set yrange [0:0.2]
+set xrange [floor(STATS_min) + 0.2: ceil(STATS_max) - 0.2]
+
+set arrow 1 from graph 0, graph 0 to graph 1.00, graph 0
+set arrow 2 from graph 0, graph 0 to graph 0, graph 1.05
+
+plot 'histogram.csv' using (($1+$2)/2.0):($3/N) smooth csplines notitle
+
+set output 'precise_histogram.png'
+
+plot 'histogram.csv' using (($1+$2)/2.0):($3) smooth frequency with boxes notitle

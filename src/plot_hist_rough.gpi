@@ -1,0 +1,42 @@
+#! /usr/bin/gnuplot
+set encoding utf8
+set datafile separator ','
+set terminal pngcairo enhanced color size 30cm,20cm font "Times-Roman,13"
+set output 'histogram_rough.png'
+
+filename = 'rough.csv'
+stats filename using 2 nooutput
+N = STATS_records
+
+unset border
+set xzeroaxis lt -1 lc rgb "black"
+set yzeroaxis lt -1 lc rgb "black"
+set xtics axis
+set ytics axis
+set xtics floor(STATS_min) - 0.2 , 0.2, ceil(STATS_max) + 0.4 
+#set xtics add ("273.2" (floor(STATS_min) + 0.2) 1) 
+set ytics 2
+set ytics nomirror
+set xlabel "Период следования импульсов, мс"
+set ylabel "Число наблюдений" rotate by 90 offset 1
+set title "Гистограмма распределения на точной шкале"
+set yrange [0:6]
+set xrange [floor(STATS_min) - 0.1: ceil(STATS_max) + 0.3]
+
+set arrow 1 from graph 0, graph 0 to graph 1.00, graph 0
+set arrow 2 from graph 0, graph 0 to graph 0, graph 1.05
+
+A = floor(STATS_min*10)/10.0
+B = ceil(STATS_max*10)/10.0
+print(STATS_min)
+print(A)
+print(STATS_max)
+print(B)
+binwidth = (B - A) / 3.99#sqrt(N)
+bin(x) = binwidth * (floor((x - A)/binwidth) + 0.5) + A
+
+set table 'histo_bins.dat'
+plot filename using (bin($2)):(1) smooth frequency
+
+set style fill solid 0.5 border -1
+plot filename using (bin($2)): (1) smooth frequency with boxes lc rgb "orange" notitle

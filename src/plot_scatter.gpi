@@ -1,0 +1,45 @@
+#! /usr/bin/gnuplot 
+set encoding utf8
+set datafile separator ','
+set terminal pngcairo enhanced color size 30cm,20cm font "Times-Roman,13"
+set output 'scatter_precise.png'
+
+filename = 'precise.csv'
+stats filename using 2 nooutput
+N = STATS_records
+mean = STATS_mean
+stddev = STATS_stddev
+
+
+set xlabel "Номер измерения"
+set ylabel "Период следования импульсов, мс" offset 1
+set title "Результаты измерений на грубой шкале"
+set grid
+unset border
+set xzeroaxis lt -1 lc rgb "black" 
+set yzeroaxis lt -1 lc rgb "black"
+set xtics axis 
+set xtics 2
+set xrange [0: N + 1]
+set ytics axis
+set arrow 1 from graph 0, graph 0 to graph 1.025, graph 0 head filled size screen 0.02, 15, 45
+set arrow 2 from graph 0, graph 0 to graph 0, graph 1.1 head filled size screen 0.02, 15, 45
+
+set ytics add ("" mean)
+
+
+f(x) = a * x + b
+a = 0.1
+b = 1.0
+
+fit f(x) filename  using 1:2 via a,b 
+
+plot filename using 1:2 with points pt 7 ps 1.5 lc rgb "blue" notitle, mean with lines lw 1.5 lc rgb "red" notitle, f(x) with lines lc rgb "green" notitle
+
+
+
+
+
+
+
+

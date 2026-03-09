@@ -1,0 +1,58 @@
+#! /usr/bin/gnuplot
+set encoding utf8
+set datafile separator ','
+
+# ===== Общая часть: вычисление границ и создание таблицы сгруппированных данных =====
+filename = 'rough.csv'
+stats filename using 2 nooutput
+N = STATS_records
+
+A = floor(STATS_min*10)/10.0
+B = ceil(STATS_max*10)/10.0
+binwidth = (B - A) / 3.99          # 4 интервала
+bin(x) = binwidth * (floor((x - A)/binwidth) + 0.5) + A
+
+set table $histo
+plot filename using (bin($2)):(1) smooth frequency
+
+
+# ===== Первый график: гистограмма числа наблюдений =====
+set terminal pngcairo enhanced color size 30cm,20cm font "Times-Roman,13"
+set output 'histogram_rough.png'
+
+unset border
+set xzeroaxis lt -1 lc rgb "black"
+set yzeroaxis lt -1 lc rgb "black"
+set xtics axis
+set ytics axis
+set xtics floor(STATS_min) - 0.2 , 0.2, ceil(STATS_max) + 0.4
+set ytics 2
+set ytics nomirror
+set xlabel "Период следования импульсов, мс"
+set ylabel "Число наблюдений" rotate by 90 offset 1
+set title "Гистограмма распределения на точной шкале"
+set yrange [0:6]
+set xrange [floor(STATS_min) - 0.1: ceil(STATS_max) + 0.3]
+
+set arrow 1 from graph 0, graph 0 to graph 1.00, graph 0
+set arrow 2 from graph 0, graph 0 to graph 0, graph 1.05
+set style fill solid 0.5 border -1
+
+plot $histo using 1:2 with boxes lc rgb "orange" notitle
+
+# ===== Второй график: относительная частота и сплайн =====
+set output 'histogram_freq_spline.png'
+
+# Переопределим подпись оси Y и диапазон
+set ylabel "Относительная частота" rotate by 90 offset 1
+stats $histo using 2 nooutput
+max_count = STATS_max
+set yrange [0: max_count/N * 1.1]
+
+# Оставляем те же настройки осей X, стрелки и заливку
+set arrow 1 from graph 0, graph 0 to graph 1.00, graph 0
+set arrow 2 from graph 0, graph 0 to graph 0, graph 1.05
+set style fill solid 0.5 border -1
+
+plot $histo using 1:($2/N) with boxes lc rgb "light-green" title "Относительная частота", \
+     $histo using 1:($2/N) smooth csplines lc rgb "blue" lw 2 title "Сплайн"
